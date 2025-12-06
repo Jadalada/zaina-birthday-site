@@ -32,6 +32,8 @@ const trackListEl = document.getElementById("track-list");
 const progressContainer = document.querySelector(".progress");
 const artBox = document.getElementById("art-box");
 const artCache = new Map();
+const audioBufferCache = new Map();
+const audioUrlCache = new Map();
 const fallbackArt =
   "radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.14), transparent 55%), radial-gradient(circle at 70% 70%, rgba(59, 7, 100, 0.24), transparent 60%), rgba(255, 255, 255, 0.02)";
 
@@ -58,21 +60,26 @@ function setAlbumArt(url) {
 function loadTrack(index) {
   currentIndex = (index + tracks.length) % tracks.length;
   const track = tracks[currentIndex];
-  audio.src = encodeURI(track.src);
+  const preloadedUrl = audioUrlCache.get(track.src);
+  audio.src = preloadedUrl || encodeURI(track.src);
   titleEl.textContent = track.title;
   artistEl.textContent = track.artist;
   progressBar.style.width = "0%";
   currentTimeEl.textContent = "0:00";
   durationEl.textContent = "0:00";
   highlightActive();
-  setAlbumArt(null);
-  getAlbumArt(track.src)
-    .then((url) => {
-      if (currentIndex === tracks.indexOf(track)) {
-        setAlbumArt(url);
-      }
-    })
-    .catch(() => setAlbumArt(null));
+  if (artCache.has(track.src)) {
+    setAlbumArt(artCache.get(track.src));
+  } else {
+    setAlbumArt(null);
+    getAlbumArt(track.src)
+      .then((url) => {
+        if (currentIndex === tracks.indexOf(track)) {
+          setAlbumArt(url);
+        }
+      })
+      .catch(() => setAlbumArt(null));
+  }
 }
 
 function playTrack() {
@@ -256,9 +263,18 @@ function extractAlbumArt(arrayBuffer) {
 
 async function getAlbumArt(src) {
   if (artCache.has(src)) return artCache.get(src);
+
+  const existingBuffer = audioBufferCache.get(src);
+  if (existingBuffer) {
+    const cachedArt = extractAlbumArt(existingBuffer);
+    artCache.set(src, cachedArt);
+    return cachedArt;
+  }
+
   try {
     const res = await fetch(src);
     const buffer = await res.arrayBuffer();
+    audioBufferCache.set(src, buffer);
     const artUrl = extractAlbumArt(buffer);
     artCache.set(src, artUrl);
     return artUrl;
@@ -268,6 +284,32 @@ async function getAlbumArt(src) {
   }
 }
 
+async function preloadAssets() {
+  const tasks = tracks.map(async (track) => {
+    if (audioUrlCache.has(track.src) && artCache.has(track.src)) return;
+    try {
+      const res = await fetch(track.src);
+      const buffer = await res.arrayBuffer();
+      audioBufferCache.set(track.src, buffer);
+      const mime = res.headers.get("content-type") || "audio/mpeg";
+      const blobUrl = URL.createObjectURL(new Blob([buffer], { type: mime }));
+      audioUrlCache.set(track.src, blobUrl);
+      if (!artCache.has(track.src)) {
+        artCache.set(track.src, extractAlbumArt(buffer));
+      }
+      if (track.src === tracks[currentIndex].src && artCache.get(track.src)) {
+        setAlbumArt(artCache.get(track.src));
+      }
+    } catch (err) {
+      audioBufferCache.set(track.src, null);
+      if (!artCache.has(track.src)) artCache.set(track.src, null);
+      console.warn("Preload failed for", track.src, err);
+    }
+  });
+  return Promise.allSettled(tasks);
+}
+
 buildTrackList();
 loadTrack(0);
 pauseTrack();
+preloadAssets();

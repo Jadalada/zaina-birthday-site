@@ -121,7 +121,11 @@ function highlightActive() {
 
 function setAlbumArt(url) {
   if (!artBox) return;
-  artBox.style.backgroundImage = url ? `url(${url})` : fallbackArt;
+  if (url) {
+    artBox.style.backgroundImage = `url("${encodeURI(url)}")`;
+  } else {
+    artBox.style.backgroundImage = fallbackArt;
+  }
 }
 
 function loadTrack(index) {

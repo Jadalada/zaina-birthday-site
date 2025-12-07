@@ -3,86 +3,105 @@ const tracks = [
     title: "Behind Blue Eyes",
     artist: "Limp Bizkit",
     src: "music/Behind Blue Eyes - Limp Bizkit.mp3",
-    cover: "images/Behind Blue Eyes - Limp Bizkit_cover.webp"
+    cover: "images/album_covers/Behind Blue Eyes - Limp Bizkit_cover.webp"
   },
   {
     title: "Black",
     artist: "Pearl Jam",
     src: "music/Black - Pearl Jam.mp3",
-    cover: "images/Black - Pearl Jam_cover.webp"
+    cover: "images/album_covers/Black - Pearl Jam_cover.webp"
   },
   {
     title: "Cupid",
     artist: "Alexandra Savior",
     src: "music/Cupid - Alexandra Savior.mp3",
-    cover: "images/Cupid - Alexandra Savior_cover.webp"
+    cover: "images/album_covers/Cupid - Alexandra Savior_cover.webp"
   },
   {
     title: "Demolition Lovers",
     artist: "My Chemical Romance",
     src: "music/Demolition Lovers - My Chemical Romance.mp3",
-    cover: "images/Demolition Lovers - My Chemical Romance_cover.webp"
+    cover: "images/album_covers/Demolition Lovers - My Chemical Romance_cover.webp"
   },
   {
     title: "Eternally Yours",
     artist: "Motionless In White",
     src: "music/Eternally Yours - Motionless In White.mp3",
-    cover: "images/Eternally Yours - Motionless In White_cover.webp"
+    cover: "images/album_covers/Eternally Yours - Motionless In White_cover.webp"
   },
   {
     title: "Gone With The Sin",
     artist: "HIM",
     src: "music/Gone With The Sin - HIM .mp3",
-    cover: "images/Gone With The Sin - HIM _cover.webp"
+    cover: "images/album_covers/Gone With The Sin - HIM _cover.webp"
   },
   {
     title: "I Won't See You Tonight (Pt. 1)",
     artist: "Avenged Sevenfold",
     src: "music/I Won't See You Tonight Part 1 - Avenged Sevenfold.mp3",
-    cover: "images/I Won't See You Tonight Part 1 - Avenged Sevenfold_cover.webp"
+    cover: "images/album_covers/I Won't See You Tonight Part 1 - Avenged Sevenfold_cover.webp"
   },
   {
     title: "Kiss Me Now",
     artist: "Pierce The Veil",
     src: "music/Kiss Me Now - Pierce The Veil.mp3",
-    cover: "images/Kiss Me Now - Pierce The Veil_cover.webp"
+    cover: "images/album_covers/Kiss Me Now - Pierce The Veil_cover.webp"
   },
   {
     title: "Kiss Me Until My Lips Fall Off",
     artist: "Lebanon Hanover",
     src: "music/Kiss Me Until My Lips Fall Off - Lebanon Hanover.mp3",
-    cover: "images/Kiss Me Until My Lips Fall Off - Lebanon Hanover_cover.webp"
+    cover: "images/album_covers/Kiss Me Until My Lips Fall Off - Lebanon Hanover_cover.webp"
   },
   {
     title: "Saturday Saviour",
     artist: "Failure",
     src: "music/Saturday Saviour - Failure.mp3",
-    cover: "images/Saturday Saviour - Failure_cover.webp"
+    cover: "images/album_covers/Saturday Saviour - Failure_cover.webp"
   },
   {
     title: "Surreal",
     artist: "Flawed Mangoes",
     src: "music/Surreal - Flawed Mangoes.mp3",
-    cover: "images/Surreal - Flawed Mangoes_cover.webp"
+    cover: "images/album_covers/Surreal - Flawed Mangoes_cover.webp"
   },
   {
     title: "Telephone",
     artist: "Lady Gaga",
     src: "music/Telephone - Lady Gaga.mp3",
-    cover: "images/Telephone - Lady Gaga_cover.webp"
+    cover: "images/album_covers/Telephone - Lady Gaga_cover.webp"
   },
   {
     title: "Your Lips, My Mouth",
     artist: "Airiel",
     src: "music/Your Lips, My Mouth - Airiel.mp3",
-    cover: "images/Your Lips, My Mouth - Airiel_cover.webp"
+    cover: "images/album_covers/Your Lips, My Mouth - Airiel_cover.webp"
   },
   {
     title: "Your Love",
     artist: "She Wants Revenge",
     src: "music/Your Love - She Wants Revenge.mp3",
-    cover: "images/Your Love - She Wants Revenge_cover.webp"
+    cover: "images/album_covers/Your Love - She Wants Revenge_cover.webp"
   }
+];
+
+const introMedia = [
+  "images/zaina_media/1.webp",
+  "images/zaina_media/2.webp",
+  "images/zaina_media/3.webp",
+  "images/zaina_media/7.webp",
+  "images/zaina_media/8.webp",
+  "images/zaina_media/11.webp",
+  "images/zaina_media/12.webp",
+  "images/zaina_media/13.webp",
+  "images/zaina_media/14.webp",
+  "images/zaina_media/15.webp",
+  "images/zaina_media/17.webp",
+  "images/zaina_media/20.webp",
+  "images/zaina_media/21.webp",
+  "images/zaina_media/22.webp",
+  "images/zaina_media/23.webp",
+  "images/zaina_media/24.webp"
 ];
 
 const audio = new Audio();
@@ -103,6 +122,82 @@ const progressContainer = document.querySelector(".progress");
 const artBox = document.getElementById("art-box");
 const fallbackArt =
   "radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.14), transparent 55%), radial-gradient(circle at 70% 70%, rgba(59, 7, 100, 0.24), transparent 60%), rgba(255, 255, 255, 0.02)";
+const introOverlay = document.getElementById("intro-overlay");
+const introImageEl = document.getElementById("intro-image");
+const introTextEl = document.getElementById("intro-text");
+
+const INTRO_FRAME_MS = 670;
+const INTRO_SWAP_GAP_MS = 200;
+const INTRO_TEXT_FADE_MS = 3000;
+const INTRO_OVERLAY_FADE_MS = 2000;
+const INTRO_MAX_BLUR = 15;
+
+const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function getIntroText(progress) {
+  if (progress < 1 / 3) return "I";
+  if (progress < 2 / 3) return "I Love";
+  return "I Love You";
+}
+
+function preloadImages(urls) {
+  return Promise.all(
+    urls.map(
+      (url) =>
+        new Promise((resolve) => {
+          const img = new Image();
+          img.onload = img.onerror = resolve;
+          img.src = url;
+        })
+    )
+  );
+}
+
+async function runIntroSequence() {
+  if (!introOverlay || !introImageEl || !introTextEl || introMedia.length === 0) return;
+
+  await preloadImages(introMedia);
+
+  for (let i = 0; i < introMedia.length; i++) {
+    const ratio = introMedia.length > 1 ? i / (introMedia.length - 1) : 1;
+    const blurAmount = ratio * INTRO_MAX_BLUR * 0.5;
+    introImageEl.removeAttribute("src");
+    introImageEl.style.display = "none";
+    introImageEl.style.filter = "blur(0px)";
+
+    introImageEl.src = introMedia[i];
+    try {
+      if (typeof introImageEl.decode === "function") {
+        await introImageEl.decode();
+      }
+    } catch (err) {
+      // If decode fails, proceed to show the image anyway.
+    }
+
+    await wait(INTRO_SWAP_GAP_MS);
+    introImageEl.style.filter = `blur(${blurAmount.toFixed(2)}px)`;
+    introImageEl.style.display = "block";
+    introTextEl.textContent = getIntroText(ratio);
+    await wait(INTRO_FRAME_MS);
+  }
+
+  introImageEl.style.display = "none";
+  introTextEl.textContent = "I Love You";
+
+  introTextEl.classList.remove("is-fading");
+  requestAnimationFrame(() => {
+    introTextEl.classList.add("is-fading");
+  });
+
+  await wait(INTRO_TEXT_FADE_MS);
+
+  introOverlay.classList.add("is-hidden");
+  setTimeout(() => {
+    if (introOverlay && introOverlay.parentElement) {
+      introOverlay.remove();
+    }
+  }, INTRO_OVERLAY_FADE_MS + 60);
+}
 
 function formatTime(seconds) {
   if (Number.isNaN(seconds)) return "0:00";
@@ -245,3 +340,4 @@ buildTrackList();
 loadTrack(0);
 pauseTrack();
 preloadCovers();
+runIntroSequence();

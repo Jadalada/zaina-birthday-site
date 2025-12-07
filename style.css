@@ -499,6 +499,62 @@ main {
   flex-wrap: wrap;
 }
 
+.intro-overlay {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20vh 5vw;
+  z-index: 999;
+  overflow: hidden;
+  transition: opacity 2s ease, visibility 0s linear 2s;
+}
+
+.intro-overlay__image-wrap {
+  max-width: 90vw;
+  max-height: 60vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#intro-image {
+  max-width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
+  filter: blur(0px);
+}
+
+.intro-overlay__text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Playfair Display", "Manrope", serif;
+  font-size: clamp(38px, 6vw, 64px);
+  font-weight: 700;
+  color: #f7f9ff;
+  letter-spacing: 0.04em;
+  text-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 3s ease;
+}
+
+.intro-overlay__text.is-fading {
+  opacity: 0;
+}
+
+.intro-overlay.is-hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 @media (max-width: 960px) {
   body {
     padding: 30px 20px 60px;

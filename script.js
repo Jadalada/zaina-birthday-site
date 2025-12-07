@@ -54,12 +54,6 @@ const tracks = [
     cover: "images/album_covers/Kiss Me Until My Lips Fall Off - Lebanon Hanover_cover.webp"
   },
   {
-    title: "Saturday Saviour",
-    artist: "Failure",
-    src: "music/Saturday Saviour - Failure.mp3",
-    cover: "images/album_covers/Saturday Saviour - Failure_cover.webp"
-  },
-  {
     title: "Surreal",
     artist: "Flawed Mangoes",
     src: "music/Surreal - Flawed Mangoes.mp3",

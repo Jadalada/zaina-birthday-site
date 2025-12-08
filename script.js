@@ -125,6 +125,13 @@ const INTRO_SWAP_GAP_MS = 200;
 const INTRO_TEXT_FADE_MS = 3000;
 const INTRO_OVERLAY_FADE_MS = 2000;
 const INTRO_MAX_BLUR = 15;
+const CONFETTI_COLORS = [
+  [237, 100, 166],
+  [139, 92, 246],
+  [168, 85, 247],
+  [59, 130, 246],
+  [255, 255, 255]
+];
 
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -192,6 +199,93 @@ async function runIntroSequence() {
     }
   }, INTRO_OVERLAY_FADE_MS + 60);
 }
+
+let confettiCanvas = null;
+let confettiCtx = null;
+let confettiParticles = [];
+let confettiRAF = null;
+
+function setupConfettiCanvas() {
+  if (confettiCanvas) return;
+  confettiCanvas = document.createElement("canvas");
+  confettiCanvas.setAttribute("aria-hidden", "true");
+  confettiCanvas.style.position = "fixed";
+  confettiCanvas.style.inset = "0";
+  confettiCanvas.style.pointerEvents = "none";
+  confettiCanvas.style.zIndex = "50";
+  document.body.appendChild(confettiCanvas);
+  confettiCtx = confettiCanvas.getContext("2d");
+  resizeConfettiCanvas();
+  window.addEventListener("resize", resizeConfettiCanvas);
+}
+
+function resizeConfettiCanvas() {
+  if (!confettiCanvas || !confettiCtx) return;
+  confettiCanvas.style.width = "100vw";
+  confettiCanvas.style.height = "100vh";
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+  confettiCtx.setTransform(1, 0, 0, 1, 0, 0);
+}
+
+function addConfettiBurst(x, y, count = 14) {
+  setupConfettiCanvas();
+  for (let i = 0; i < count; i++) {
+    const angle = -Math.PI / 2 + (Math.random() - 0.5) * (Math.PI / 2);
+    const speed = 4 + Math.random() * 4;
+    const [r, g, b] = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+    confettiParticles.push({
+      x,
+      y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      size: 6 + Math.random() * 4,
+      rotation: Math.random() * Math.PI * 2,
+      rotationSpeed: (Math.random() - 0.5) * 0.2,
+      alpha: 1,
+      decay: 0.97 + Math.random() * 0.02,
+      color: `rgba(${r}, ${g}, ${b}, `
+    });
+  }
+  if (!confettiRAF) {
+    confettiRAF = requestAnimationFrame(drawConfetti);
+  }
+}
+
+function drawConfetti() {
+  if (!confettiCtx || !confettiCanvas) return;
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  confettiParticles = confettiParticles.filter((p) => p.alpha > 0.05 && p.y < window.innerHeight + 40);
+  for (const p of confettiParticles) {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.12;
+    p.rotation += p.rotationSpeed;
+    p.alpha *= p.decay;
+    confettiCtx.save();
+    confettiCtx.translate(p.x, p.y);
+    confettiCtx.rotate(p.rotation);
+    confettiCtx.fillStyle = `${p.color}${p.alpha})`;
+    confettiCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+    confettiCtx.restore();
+  }
+  if (confettiParticles.length > 0) {
+    confettiRAF = requestAnimationFrame(drawConfetti);
+  } else {
+    confettiRAF = null;
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  }
+}
+
+document.addEventListener(
+  "click",
+  (event) => {
+    const x = event.clientX || window.innerWidth / 2;
+    const y = event.clientY || window.innerHeight / 2;
+    addConfettiBurst(x, y, 12);
+  },
+  { passive: true }
+);
 
 function formatTime(seconds) {
   if (Number.isNaN(seconds)) return "0:00";
